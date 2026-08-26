@@ -12,7 +12,7 @@ const meta = {
     layout: 'fullscreen'
   },
   decorators: [
-    (Story) => (
+    (Story: any) => (
       <div style={{ width: 'fit-content', margin: 20 }}>
         <Story />
       </div>
