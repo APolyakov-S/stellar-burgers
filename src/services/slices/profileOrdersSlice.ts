@@ -21,11 +21,9 @@ export const profileOrdersSlice = createSlice({
   name: 'profileOrders',
   initialState,
   reducers: {
-    // Обновление заказов через WebSocket
     setProfileOrders: (state, action: { payload: TOrder[] }) => {
       state.orders = action.payload;
     },
-    // Очистка истории (при дисконнекте)
     clearProfileOrders: (state) => {
       state.orders = [];
     }

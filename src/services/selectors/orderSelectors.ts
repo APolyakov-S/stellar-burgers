@@ -12,3 +12,8 @@ export const selectOrderModalData = createSelector(
   [selectOrderState],
   (orderState) => orderState.orderModalData
 );
+
+export const selectOrderByNumber = createSelector(
+  [selectOrderState],
+  (orderState) => orderState.orderByNumber
+);
