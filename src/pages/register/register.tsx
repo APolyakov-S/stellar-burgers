@@ -3,6 +3,7 @@ import { RegisterUI } from '@ui-pages';
 import { useDispatch } from '../../services/store';
 import { registerUser } from '../../services/slices/userSlice';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { TLocationState } from '../../services/location-state';
 
 export const Register: FC = () => {
   const [userName, setUserName] = useState('');
@@ -18,8 +19,8 @@ export const Register: FC = () => {
     dispatch(registerUser({ name: userName, email, password }))
       .unwrap()
       .then(() => {
-        const from = (location.state as any)?.from || '/';
-        navigate(from, { replace: true });
+        const { from } = (location.state as TLocationState | null) ?? {};
+        navigate(from ?? '/', { replace: true });
       })
       .catch((err) => {
         setError(err.message || 'Ошибка регистрации');

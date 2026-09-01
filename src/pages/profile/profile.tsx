@@ -5,14 +5,12 @@ import {
   selectUserData,
   selectUserError
 } from '../../services/selectors/userSelectors';
-import { updateUser, logoutUser } from '../../services/slices/userSlice';
-import { useNavigate } from 'react-router-dom';
+import { updateUser } from '../../services/slices/userSlice';
 
 export const Profile: FC = () => {
   const user = useSelector(selectUserData);
   const error = useSelector(selectUserError);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const [formValue, setFormValue] = useState({
     name: user.name,
@@ -33,9 +31,18 @@ export const Profile: FC = () => {
     formValue.email !== user?.email ||
     !!formValue.password;
 
-  const handleSubmit = (e: SyntheticEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
-    dispatch(updateUser(formValue));
+    try {
+      const updatedUser = await dispatch(updateUser(formValue)).unwrap();
+      setFormValue({
+        name: updatedUser.name,
+        email: updatedUser.email,
+        password: ''
+      });
+    } catch {
+      // Ошибка сохранения уже записана в стор и отображается в форме
+    }
   };
 
   const handleCancel = (e: SyntheticEvent) => {
@@ -52,11 +59,6 @@ export const Profile: FC = () => {
       ...prevState,
       [e.target.name]: e.target.value
     }));
-  };
-
-  const handleLogout = () => {
-    dispatch(logoutUser());
-    navigate('/login', { replace: true });
   };
 
   return (

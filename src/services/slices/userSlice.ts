@@ -86,12 +86,19 @@ export const userSlice = createSlice({
         state.user = action.payload;
         state.isAuthChecked = true;
       })
+      .addCase(loginUser.pending, (state) => {
+        state.error = null;
+      })
       .addCase(loginUser.rejected, (state, action) => {
         state.error = action.error.message || 'Ошибка логина';
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthChecked = true;
+        state.error = null;
+      })
+      .addCase(registerUser.pending, (state) => {
+        state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.error = action.error.message || 'Ошибка регистрации';
@@ -99,9 +106,17 @@ export const userSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthChecked = true;
+        state.error = null;
+      })
+      .addCase(updateUser.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.error = action.error.message || 'Ошибка обновления данных';
       })
       .addCase(updateUser.fulfilled, (state, action) => {
         state.user = action.payload;
+        state.error = null;
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = {

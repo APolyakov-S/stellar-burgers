@@ -3,6 +3,7 @@ import { LoginUI } from '@ui-pages';
 import { useDispatch } from '../../services/store';
 import { loginUser } from '../../services/slices/userSlice';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { TLocationState } from '../../services/location-state';
 
 export const Login: FC = () => {
   const [email, setEmail] = useState('');
@@ -17,8 +18,8 @@ export const Login: FC = () => {
     dispatch(loginUser({ email, password }))
       .unwrap()
       .then(() => {
-        const from = (location.state as any)?.from || '/';
-        navigate(from, { replace: true });
+        const { from } = (location.state as TLocationState | null) ?? {};
+        navigate(from ?? '/', { replace: true });
       })
       .catch((err) => {
         setError(err.message || 'Ошибка входа');

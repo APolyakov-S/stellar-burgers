@@ -1,6 +1,6 @@
 import React from 'react';
 import { OrderStatusUI } from '@ui';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj, StoryFn } from '@storybook/react';
 
 const meta = {
   title: 'Example/OrderStatus',
@@ -12,7 +12,7 @@ const meta = {
     layout: 'fullscreen'
   },
   decorators: [
-    (Story: any) => (
+    (Story: StoryFn) => (
       <div style={{ width: 'fit-content', margin: 20 }}>
         <Story />
       </div>

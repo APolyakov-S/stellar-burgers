@@ -14,34 +14,48 @@ export const AppHeaderUI: FC<TAppHeaderUIProps> = ({ userName, pathname }) => (
   <header className={styles.header}>
     <nav className={`${styles.menu} p-4`}>
       <div className={styles.menu_part_left}>
-        <>
-          <NavLink
-            to='/'
-            className={({ isActive }) =>
-              clsx(
-                'text text_type_main-default ml-2 mr-10',
-                isActive ? 'text_color_primary' : 'text_color_inactive'
-              )
-            }
-          >
-            <BurgerIcon type={pathname === '/' ? 'primary' : 'secondary'} />
-            <span className='ml-2'>Конструктор</span>
-          </NavLink>
-        </>
-        <>
-          <NavLink
-            to='/feed'
-            className={({ isActive }) =>
-              clsx(
-                'text text_type_main-default ml-2',
-                isActive ? 'text_color_primary' : 'text_color_inactive'
-              )
-            }
-          >
-            <ListIcon type={pathname === '/feed' ? 'primary' : 'secondary'} />
-            <span className='ml-2'>Лента заказов</span>
-          </NavLink>
-        </>
+        <NavLink
+          to='/'
+          className={({ isActive }) =>
+            clsx(
+              'text text_type_main-default ml-2 mr-10',
+              styles.link,
+              isActive || pathname.startsWith('/ingredients')
+                ? 'text_color_primary'
+                : 'text_color_inactive'
+            )
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <BurgerIcon
+                type={
+                  isActive || pathname.startsWith('/ingredients')
+                    ? 'primary'
+                    : 'secondary'
+                }
+              />
+              <span className='ml-2'>Конструктор</span>
+            </>
+          )}
+        </NavLink>
+        <NavLink
+          to='/feed'
+          className={({ isActive }) =>
+            clsx(
+              'text text_type_main-default ml-2',
+              styles.link,
+              isActive ? 'text_color_primary' : 'text_color_inactive'
+            )
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <ListIcon type={isActive ? 'primary' : 'secondary'} />
+              <span className='ml-2'>Лента заказов</span>
+            </>
+          )}
+        </NavLink>
       </div>
       <div className={styles.logo}>
         <Logo className='' />
@@ -52,16 +66,17 @@ export const AppHeaderUI: FC<TAppHeaderUIProps> = ({ userName, pathname }) => (
           className={({ isActive }) =>
             clsx(
               'text text_type_main-default ml-2',
-              isActive || pathname.startsWith('/profile')
-                ? 'text_color_primary'
-                : 'text_color_inactive'
+              styles.link,
+              isActive ? 'text_color_primary' : 'text_color_inactive'
             )
           }
         >
-          <ProfileIcon
-            type={pathname.startsWith('/profile') ? 'primary' : 'secondary'}
-          />
-          <span className='ml-2'>{userName || 'Личный кабинет'}</span>
+          {({ isActive }) => (
+            <>
+              <ProfileIcon type={isActive ? 'primary' : 'secondary'} />
+              <span className='ml-2'>{userName || 'Личный кабинет'}</span>
+            </>
+          )}
         </NavLink>
       </div>
     </nav>

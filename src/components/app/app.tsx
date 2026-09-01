@@ -1,11 +1,5 @@
-import { ConstructorPage } from '@pages';
-import '../../index.css';
-import styles from './app.module.css';
-
-import { AppHeader } from '@components';
-import { Preloader } from '@ui';
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import {
+  ConstructorPage,
   ForgotPassword,
   Login,
   NotFound404,
@@ -13,9 +7,20 @@ import {
   Register,
   ResetPassword,
   Feed,
-  ProfileOrders,
-  IngredientDetailsPage
+  ProfileOrders
 } from '@pages';
+import '../../index.css';
+import styles from './app.module.css';
+
+import { AppHeader } from '@components';
+import { Preloader } from '@ui';
+import {
+  Route,
+  Routes,
+  useLocation,
+  useMatch,
+  useNavigate
+} from 'react-router-dom';
 import { useEffect } from 'react';
 import { fetchUser } from '../../services/slices/userSlice';
 import { fetchIngredients } from '../../services/slices/ingredientsSlice';
@@ -23,6 +28,7 @@ import { selectIngredientsLoading } from '../../services/selectors/ingredientsSe
 import { useDispatch, useSelector } from '../../services/store';
 import { selectUserIsAuthChecked } from '../../services/selectors/userSelectors';
 import { ProtectedRoute } from '../../services/protected-route';
+import { TLocationState } from '../../services/location-state';
 import { Modal } from '@components';
 import { IngredientDetails } from '@components';
 import { OrderInfo } from '@components';
@@ -34,7 +40,16 @@ const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const background = location.state && (location.state as any).background;
+  const locationState = location.state as TLocationState | null;
+  const background = locationState?.background;
+
+  const feedOrderMatch = useMatch('/feed/:number');
+  const profileOrderMatch = useMatch('/profile/orders/:number');
+  const orderNumber =
+    feedOrderMatch?.params.number ?? profileOrderMatch?.params.number;
+  const orderNumberTitle = orderNumber
+    ? `#${String(orderNumber).padStart(6, '0')}`
+    : '';
 
   useEffect(() => {
     dispatch(fetchIngredients());
@@ -120,7 +135,7 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-          <Route path='/ingredients/:id' element={<IngredientDetailsPage />} />
+          <Route path='/ingredients/:id' element={<IngredientDetails />} />
           <Route path='*' element={<NotFound404 />} />
         </Routes>
       )}
@@ -129,7 +144,7 @@ const App = () => {
           <Route
             path='/feed/:number'
             element={
-              <Modal title='Детали заказа' onClose={closeModal}>
+              <Modal title={orderNumberTitle} onClose={closeModal}>
                 <OrderInfo />
               </Modal>
             }
@@ -137,9 +152,11 @@ const App = () => {
           <Route
             path='/profile/orders/:number'
             element={
-              <Modal title='Детали заказа' onClose={closeModal}>
-                <OrderInfo />
-              </Modal>
+              <ProtectedRoute>
+                <Modal title={orderNumberTitle} onClose={closeModal}>
+                  <OrderInfo />
+                </Modal>
+              </ProtectedRoute>
             }
           />
           <Route
