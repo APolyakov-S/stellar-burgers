@@ -1,12 +1,16 @@
 import { ProfileUI } from '@ui-pages';
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from '../../services/store';
+import {
+  selectUserData,
+  selectUserError
+} from '../../services/selectors/userSelectors';
+import { updateUser } from '../../services/slices/userSlice';
 
 export const Profile: FC = () => {
-  /** TODO: взять переменную из стора */
-  const user = {
-    name: '',
-    email: ''
-  };
+  const user = useSelector(selectUserData);
+  const error = useSelector(selectUserError);
+  const dispatch = useDispatch();
 
   const [formValue, setFormValue] = useState({
     name: user.name,
@@ -27,8 +31,18 @@ export const Profile: FC = () => {
     formValue.email !== user?.email ||
     !!formValue.password;
 
-  const handleSubmit = (e: SyntheticEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
+    try {
+      const updatedUser = await dispatch(updateUser(formValue)).unwrap();
+      setFormValue({
+        name: updatedUser.name,
+        email: updatedUser.email,
+        password: ''
+      });
+    } catch {
+      // Ошибка сохранения уже записана в стор и отображается в форме
+    }
   };
 
   const handleCancel = (e: SyntheticEvent) => {
@@ -54,8 +68,7 @@ export const Profile: FC = () => {
       handleCancel={handleCancel}
       handleSubmit={handleSubmit}
       handleInputChange={handleInputChange}
+      updateUserError={error || undefined}
     />
   );
-
-  return null;
 };
