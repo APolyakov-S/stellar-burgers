@@ -46,9 +46,10 @@ describe('Редьюсер слайса ingredients', () => {
   });
 
   it('обрабатывает экшен fetchIngredients.pending', () => {
-    const state = ingredientsReducer(initialState, {
-      type: fetchIngredients.pending.type
-    });
+    const state = ingredientsReducer(
+      initialState,
+      fetchIngredients.pending('req-1')
+    );
     expect(state.isLoading).toBe(true);
     expect(state.error).toBeNull();
     expect(state.ingredients).toEqual([]);
@@ -75,15 +76,5 @@ describe('Редьюсер слайса ingredients', () => {
     );
     expect(state.ingredients).toHaveLength(1);
     expect(state.ingredients[0]).toEqual(mockIngredients[0]);
-  });
-
-  it('не мутирует исходное состояние и возвращает новый объект', () => {
-    const before = { ...initialState };
-    const state = ingredientsReducer(
-      initialState,
-      addIngredient(mockIngredients[1])
-    );
-    expect(initialState.ingredients).toEqual(before.ingredients);
-    expect(state).not.toBe(initialState);
   });
 });

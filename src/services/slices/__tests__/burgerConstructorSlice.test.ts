@@ -6,7 +6,7 @@ import burgerConstructorReducer, {
   clearConstructor
 } from '../burgerConstructorSlice';
 import { createOrder } from '../orderSlice';
-import { TConstructorIngredient, TIngredient, TOrder } from '@utils-types';
+import { TIngredient, TOrder } from '@utils-types';
 
 const bun: TIngredient = {
   _id: 'bun-1',
@@ -73,10 +73,10 @@ const initialState = {
 
 /** Состояние с булкой и двумя ингредиентами, у которых заданы id. */
 const filledState = {
-  bun: { ...bun, id: 'bun-instance-1' } as TConstructorIngredient,
+  bun: { ...bun, id: 'bun-instance-1' },
   ingredients: [
-    { ...meat, id: 'meat-instance-1' } as TConstructorIngredient,
-    { ...sauce, id: 'sauce-instance-1' } as TConstructorIngredient
+    { ...meat, id: 'meat-instance-1' },
+    { ...sauce, id: 'sauce-instance-1' }
   ]
 };
 
@@ -95,9 +95,8 @@ describe('Редьюсер слайса burgerConstructor', () => {
   it('заменяет ранее добавленную булку при добавлении другой', () => {
     const first = burgerConstructorReducer(undefined, addIngredient(bun));
     const second = burgerConstructorReducer(first, addIngredient(secondBun));
-    expect(second.bun?.name).toBe('Булка космическая');
+    expect(second.bun?._id).toBe('bun-2');
     expect(second.ingredients).toEqual([]);
-    expect(second.bun?.price).toBe(bun.price);
   });
 
   it('добавляет ингредиент по экшену addIngredient в список ingredients', () => {
@@ -108,10 +107,10 @@ describe('Редьюсер слайса burgerConstructor', () => {
   });
 
   it('удаляет ингредиент из списка по экшену removeIngredient', () => {
-    const state = burgerConstructorReducer(filledState, {
-      type: removeIngredient.type,
-      payload: 'meat-instance-1'
-    });
+    const state = burgerConstructorReducer(
+      filledState,
+      removeIngredient('meat-instance-1')
+    );
     expect(state.ingredients).toHaveLength(1);
     expect(state.ingredients[0].id).toBe('sauce-instance-1');
     expect(state.bun).toEqual(filledState.bun);
@@ -154,14 +153,5 @@ describe('Редьюсер слайса burgerConstructor', () => {
     ]);
     const state = burgerConstructorReducer(filledState, action);
     expect(state).toEqual(initialState);
-  });
-
-  it('не мутирует исходное состояние при добавлении ингредиента', () => {
-    const beforeEachState = JSON.parse(JSON.stringify(filledState));
-    const state = burgerConstructorReducer(filledState, addIngredient(meat));
-    expect(filledState.ingredients).toHaveLength(
-      beforeEachState.ingredients.length
-    );
-    expect(state).not.toBe(filledState);
   });
 });

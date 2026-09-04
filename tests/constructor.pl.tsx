@@ -4,7 +4,9 @@ import path from 'path';
 const HARS_DIR = path.join(__dirname, 'hars');
 
 const BUN_NAME = 'Краторная булка N-200i';
+const SECOND_BUN_NAME = 'Флюоресцентная булка';
 const MEAT_NAME = 'Мясо бессмертных моллюсков Protostomia';
+const SAUCE_NAME = 'Соус фирменный';
 const BUN_ID = '643d69a5c3f7b9001cfa093c';
 
 /** Перехватывает все запросы к бэкенду и подменяет их моками из HAR-файлов. */
@@ -46,30 +48,37 @@ const getConstructor = (page: Page) =>
 /** Возвращает контейнер, в который портируются модальные окна. */
 const getModal = (page: Page) => page.locator('#modals');
 
+/** Нажимает кнопку «Добавить» на карточке ингредиента с указанным именем. */
+const addIngredient = async (page: Page, name: string) => {
+  await getIngredientCard(page, name)
+    .getByRole('button', { name: 'Добавить', exact: true })
+    .click();
+};
+
 test.beforeEach(async ({ page }) => {
   await mockBackend(page);
 });
 
 test.describe('Страница конструктора бургера', () => {
-  test('добавление булки и начинки из списка ингредиентов в конструктор', async ({
-    page
-  }) => {
+  test('добавление ингредиентов из списка в конструктор', async ({ page }) => {
     await openConstructorPage(page);
 
-    // добавляем булку — она появляется в верхней и нижней части бургера
-    await getIngredientCard(page, BUN_NAME)
-      .getByRole('button', { name: 'Добавить', exact: true })
-      .click();
-
     const constructor = getConstructor(page);
+
+    // до добавления булки в конструкторе булок нет
+    await expect(constructor.getByText(`${BUN_NAME} (верх)`)).toHaveCount(0);
+    await expect(constructor.getByText(`${BUN_NAME} (низ)`)).toHaveCount(0);
+
+    // добавляем булку — она появляется в верхней и нижней части бургера
+    await addIngredient(page, BUN_NAME);
     await expect(constructor.getByText(`${BUN_NAME} (верх)`)).toBeVisible();
     await expect(constructor.getByText(`${BUN_NAME} (низ)`)).toBeVisible();
 
-    // добавляем начинку — она появляется в центральной части бургера
-    await getIngredientCard(page, MEAT_NAME)
-      .getByRole('button', { name: 'Добавить', exact: true })
-      .click();
+    // до добавления начинки её нет в конструкторе
+    await expect(constructor.getByText(MEAT_NAME)).toHaveCount(0);
 
+    // добавляем начинку — она появляется в центральной части бургера
+    await addIngredient(page, MEAT_NAME);
     await expect(constructor.getByText(MEAT_NAME)).toBeVisible();
 
     // на карточке добавленной начинки отображается счётчик
@@ -77,11 +86,27 @@ test.describe('Страница конструктора бургера', () => 
       getIngredientCard(page, MEAT_NAME).getByText('1', { exact: true })
     ).toBeVisible();
 
-    // вторая булка заменяет первую, а не добавляется второй раз
-    await getIngredientCard(page, 'Соус фирменный')
-      .getByRole('button', { name: 'Добавить', exact: true })
-      .click();
-    await expect(constructor.getByText('Соус фирменный')).toBeVisible();
+    // до добавления соуса его нет в конструкторе
+    await expect(constructor.getByText(SAUCE_NAME)).toHaveCount(0);
+
+    // добавляем соус
+    await addIngredient(page, SAUCE_NAME);
+    await expect(constructor.getByText(SAUCE_NAME)).toBeVisible();
+
+    // вторая булка заменяет первую: новая появляется, старая исчезает
+    await expect(
+      constructor.getByText(`${SECOND_BUN_NAME} (верх)`)
+    ).toHaveCount(0);
+
+    await addIngredient(page, SECOND_BUN_NAME);
+    await expect(
+      constructor.getByText(`${SECOND_BUN_NAME} (верх)`)
+    ).toBeVisible();
+    await expect(
+      constructor.getByText(`${SECOND_BUN_NAME} (низ)`)
+    ).toBeVisible();
+    await expect(constructor.getByText(`${BUN_NAME} (верх)`)).toHaveCount(0);
+    await expect(constructor.getByText(`${BUN_NAME} (низ)`)).toHaveCount(0);
   });
 
   test('открытие модального окна ингредиента и закрытие по крестику', async ({
@@ -147,13 +172,22 @@ test.describe('Страница конструктора бургера', () => 
     // в шапку подставляются данные пользователя из мока
     await expect(page.getByText('Тестировщик')).toBeVisible();
 
-    // собираем бургер
-    await getIngredientCard(page, BUN_NAME)
-      .getByRole('button', { name: 'Добавить', exact: true })
-      .click();
-    await getIngredientCard(page, MEAT_NAME)
-      .getByRole('button', { name: 'Добавить', exact: true })
-      .click();
+    const constructor = getConstructor(page);
+
+    // собираем бургер: сначала убеждаемся, что конструктор пуст
+    await expect(constructor.getByText(`${BUN_NAME} (верх)`)).toHaveCount(0);
+    await expect(constructor.getByText(MEAT_NAME)).toHaveCount(0);
+
+    await addIngredient(page, BUN_NAME);
+    await addIngredient(page, MEAT_NAME);
+
+    // перед оформлением заказа: булка и начинка действительно в конструкторе,
+    // а модальное окно ещё не открыто
+    await expect(constructor.getByText(`${BUN_NAME} (верх)`)).toBeVisible();
+    await expect(constructor.getByText(MEAT_NAME)).toBeVisible();
+    await expect(getModal(page).getByText('идентификатор заказа')).toHaveCount(
+      0
+    );
 
     // клик по кнопке «Оформить заказ» отправляет запрос создания заказа
     await page
@@ -166,7 +200,6 @@ test.describe('Страница конструктора бургера', () => 
     await expect(modal.getByText('идентификатор заказа')).toBeVisible();
 
     // конструктор очищается от добавленных ингредиентов
-    const constructor = getConstructor(page);
     await expect(constructor.getByText('Выберите булки')).toHaveCount(2);
     await expect(constructor.getByText(`${BUN_NAME} (верх)`)).toHaveCount(0);
     await expect(constructor.getByText(MEAT_NAME)).toHaveCount(0);
